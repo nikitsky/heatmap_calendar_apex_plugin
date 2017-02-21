@@ -8,12 +8,12 @@ body {
 	text-anchor: end;
 }
 
-.days_caption {
+.day_caption {
 	font-size: 0.8em;
 	text-anchor: end;
 }
 
-.months_caption {
+.month_caption {
 	font-size: 1em%;
 	text-anchor: end;
 }
