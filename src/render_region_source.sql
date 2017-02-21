@@ -39,7 +39,8 @@ begin
                     p_omit_null => true,
                     p_add_comma => false
                 )||
-            '}'||
+            '},'||
+            p_region.init_javascript_code||
         ');'
     );
 

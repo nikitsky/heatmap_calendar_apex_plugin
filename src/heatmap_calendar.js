@@ -1,8 +1,9 @@
-function heatmap_calendar( pRegionId, pOptions ) {
+function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
+
     var gOptions = jQuery.extend(
         {
             cellSize: 16,
-            years: [2016, 2017, 2018],
+            years: [],
             day_caption: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
 		    month_caption: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
 		    DateFormatMask: "%d.%m.%Y",
@@ -10,6 +11,18 @@ function heatmap_calendar( pRegionId, pOptions ) {
         },
         pOptions
     );
+
+    if (gOptions.years.length == 0) {
+    		gOptions.years.push(new Date().getFullYear())
+    };
+
+	if ( $.isFunction( pPluginInitJavascript ) ) {
+		var newOptions = {};
+        var changedCalOptions = pPluginInitJavascript( newOptions );
+
+	    var gOptions = jQuery.extend(gOptions, newOptions);
+
+    }
 
     var gRegion$ = jQuery( "#" + apex.util.escapeCSS( pRegionId ) + '_hc', apex.gPageContext$);
 
