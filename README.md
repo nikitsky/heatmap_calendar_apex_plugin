@@ -8,7 +8,7 @@ It is based on [Mike Bostock’s Calendar View](https://bl.ocks.org/mbostock/406
 * Import plugin file "region_type_plugin_com_nikitsky_heatmap_calendar.sql" from source directory into your application
 
 #Preview
-![Heatmap calendar preview](https://github.com/nikitsky/heatmap_calendar_apex_plugin/preview.png?raw=true "Plugin screenshot")
+![Heatmap calendar preview](https://github.com/nikitsky/heatmap_calendar_apex_plugin/blob/master/preview.png?raw=true "Plugin screenshot")
 
 #Plugin Settings
 
