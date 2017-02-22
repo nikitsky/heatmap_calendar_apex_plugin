@@ -43,7 +43,7 @@ wwv_flow_api.create_plugin(
 '    l_SellSize  apex_application_page_regions.attribute_01%type := p_region.attribute_01;',
 'begin',
 '    --add d3js library',
-'    apex_javascript.add_library( p_name                  => ''d3#MIN#'',',
+'    apex_javascript.add_library( p_name                  => ''d3'',',
 '                                 p_directory             => p_plugin.file_prefix,',
 '                                 p_check_to_add_minified => TRUE );',
 '',
