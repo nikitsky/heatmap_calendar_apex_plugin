@@ -34,10 +34,6 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
     width = gOptions.cellSize * 53 + 51;
     height = gOptions.cellSize * 7 + 31;
 
-
-    _draw ([]);
-
-
 	function _draw( pData ) {
 		var svg = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' ).selectAll("svg")
 		    .data(gOptions.years)
@@ -71,7 +67,7 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 			.data(gOptions.month_caption)
 			.enter().append("text")
 				.attr("class", "month_caption")
-				.attr("x", function(d, i) { return ((i+1) * (gOptions.cellSize * 53 / 12)-gOptions.cellSize*1.5) ; })
+				.attr("x", function(d, i) { return ((i+1) * (gOptions.cellSize * 53 / 12)-gOptions.cellSize*1.2) ; })
 				.attr("dy", "-.5em")
 				.text(function(d,i){ return d });
 
@@ -107,6 +103,16 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 		      + "H" + (w1 + 1) * gOptions.cellSize + "V" + 0
 		      + "H" + (w0 + 1) * gOptions.cellSize + "Z";
 		}
+
+		var data = d3.nest()
+			.key(function(e) {return e.date })
+			.rollup(function(e) {return d3.sum(e, function(e){ return e.value; })})
+			.object(pData.dateData);
+
+		rect.filter(function(d) { return d in data; })
+			.attr("class", function(d) { return "day q" + data[d] + "-11"; })
+			.select("title")
+			.text(function(d) { return d + ": " + data[d]; });
 	}
 
 
@@ -131,9 +137,9 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
     }
 
 
-    // gRegion$
-    //     .on( "apexrefresh", _refresh )
-    //     .trigger( "apexrefresh" );
+    gRegion$
+        .on( "apexrefresh", _refresh )
+        .trigger( "apexrefresh" );
 }
 
 

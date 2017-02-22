@@ -10,16 +10,14 @@ is
     c_day_column          constant varchar2(255) := p_region.attribute_02;
     c_value_column        constant varchar2(255) := p_region.attribute_03;
 
+    l_DateFormatMask      apex_application_page_regions.attribute_04%type := p_region.attribute_04;
+
     l_day_column_no          pls_integer;
     l_value_column_no        pls_integer;
 
     l_column_value_list      apex_plugin_util.t_column_value_list2;
 
-    l_top_label      varchar2(4000);
     l_value             varchar2(4000);
-    l_bottom_label      varchar2(4000);
-    l_percent           number;
-    l_url               varchar2(4000);
     l_class             varchar2(255);
 
 begin
@@ -35,7 +33,7 @@ begin
     -- Get the actual column# for faster access and also verify that the data type
     -- of the column matches with what we are looking for
     l_day_column_no := apex_plugin_util.get_column_no (
-                            p_attribute_label   => 'Day column',
+                            p_attribute_label   => 'Date column',
                             p_column_alias      => c_day_column,
                             p_column_value_list => l_column_value_list,
                             p_is_required       => true,
@@ -62,7 +60,7 @@ begin
     --        )
     --    );
     apex_json.open_object();
-    apex_json.open_array('data');
+    apex_json.open_array('dateData');
     for l_row_num in 1 .. l_column_value_list(1).value_list.count loop
         begin
             apex_json.open_object();
@@ -74,17 +72,21 @@ begin
 
             -- get the day
             l_value := apex_plugin_util.get_value_as_varchar2 (
-                               p_data_type => l_column_value_list(l_day_column_no).data_type,
-                               p_value     => l_column_value_list(l_day_column_no).value_list(l_row_num) );
+                               p_data_type   => l_column_value_list(l_day_column_no).data_type,
+                               p_value       => l_column_value_list(l_day_column_no).value_list(l_row_num),
+                               p_format_mask => l_DateFormatMask);
 
-            apex_json.write('day', l_value);
+            apex_json.write('date', l_value);
 
             -- get the value
             l_value := apex_plugin_util.get_value_as_varchar2 (
                                p_data_type => l_column_value_list(l_value_column_no).data_type,
                                p_value     => l_column_value_list(l_value_column_no).value_list(l_row_num) );
 
-            apex_json.write('value', l_value);
+            apex_json.write(
+                p_name       => 'value',
+                p_value      => to_number(l_value),
+                p_write_null => false);
 
             apex_json.close_object();
 
