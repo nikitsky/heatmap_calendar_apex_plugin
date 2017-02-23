@@ -12,11 +12,16 @@ It is based on [Mike Bostock’s Calendar View](https://bl.ocks.org/mbostock/406
 
 #Plugin Settings
 
-| option     | type   |  description                    | default |
-| ---------- | ------ | ------------------------------- | ------- |
-| cellSize   | number |  size of day square in pixels   | 16      |
-| years | array | years you want to see. E.g. [2015, 2016] | the current year | 
-| day_caption | array | Custom caption for weekdays (from Monday to Sunday)|['Mon','Tue','Wed','Thu','Fri','Sat','Sun']|
-| month_caption | array | Custom caption for month (from January to December) | ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] |
+| option             | type    |  description                    |
+| ------------------ | ------- | ------------------------------- | 
+| cellSize           | number  | Size of day square in pixels  |
+| firstYear          | number  | The first year to be shown on the calendar. If not provided, the current year is used |
+| periods            | number  | The number of years you want to display |
+| dayCaption         | array   | Custom caption for weekdays (from Monday to Sunday), e.g. ['M','T','W','T','F','S','S'] |
+| monthCaption       | array   | Custom caption for month (from January to December), e.g. ['Jän', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sept', 'Okt', 'Nov', 'Dez'] |
+| repeatMonthCaption | boolean | Show month captions for every year. False is default |
+| colorRange         | array   | Starting and finishing colours |
+| valueRange         | array   | Expected minimum and maximum values used for colours blending |
+
 
 released under [BSD license](http://opensource.org/licenses/BSD-3-Clause). Copyright 2017 Valentine Nikitsky
