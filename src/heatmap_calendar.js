@@ -3,17 +3,19 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
     var gOptions = jQuery.extend(
         {
             cellSize: 16,
-            years: [],
-            day_caption: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
-		    month_caption: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+            firstYear: 0,
+            periods: 1,
+            dayCaption: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+		    monthCaption: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+		    repeatMonthCaption: false,
 		    DateFormatMask: "%d.%m.%Y",
-		    calendarClass: "RdYlGn"
+		    calendarClass: "RdYlGn",
         },
         pOptions
     );
 
-    if (gOptions.years.length == 0) {
-    		gOptions.years.push(new Date().getFullYear())
+    if (gOptions.firstYear == 0) {
+    		gOptions.firstYear = new Date().getFullYear()
     };
 
 	if ( $.isFunction( pPluginInitJavascript ) ) {
@@ -23,6 +25,9 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 	    var gOptions = jQuery.extend(gOptions, newOptions);
 
     }
+
+    gOptions.firstYear = parseInt(gOptions.firstYear);
+    gOptions.periods = parseInt(gOptions.periods);
 
     var gRegion$ = jQuery( "#" + apex.util.escapeCSS( pRegionId ) + '_hc', apex.gPageContext$);
 
@@ -36,35 +41,43 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 
 	function _draw( pData ) {
 		var svg = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' ).selectAll("svg")
-		    .data(gOptions.years)
+		    .data(d3.range(gOptions.firstYear, gOptions.firstYear+gOptions.periods))
 		  	.enter().append("svg")
 				    .attr("width", width)
-				    .attr("height", height)
+				    //add 30px for month caption if required
+				    .attr("height", function(d, i){ return (gOptions.cellSize * 7) + (( gOptions.repeatMonthCaption || i == 0)? 31:2) ;})
 				    .attr("class", gOptions.calendarClass)
 				.append("g")
-				    .attr("transform", "translate(50, 30)");
+				    .attr("transform", function(d, i){return "translate(50," +(( gOptions.repeatMonthCaption || i == 0)? 30:1) + ")"});
+				    // .attr("transform", "translate(50, 30)");
 
 		//caption: year
 		svg.append("text")
-	    // .attr("transform", "translate(-36," + cellSize * 3.5 + ")rotate(-90)")
-		    .attr("dy", "-.25em")
+	    .attr("transform", "translate(-36," + gOptions.cellSize * 3.5 + ")rotate(-90)")
+		    // .attr("dy", "-.25em")
 		    .attr("class", "year_caption")
 		    .text(function(d) { return d; });
 
 		//caption: weekdays
 		var weekdays = svg.selectAll(".day_caption")
 			.data (d3.range(0,7))
-			.data ( gOptions.day_caption )
+			.data ( gOptions.dayCaption )
 			.enter().append("text")
 				.attr("class", "day_caption")
 				.attr("x", "-5")
 			    .attr("y", function(d, i) { return gOptions.cellSize*(i+1); })
-			    .attr("dy", "-.25em")
+			    .attr("dy", "-.3em")
 			    .text(function(d) { return d ; });
 
 		//capton: month
-		var month_captions = svg.selectAll(".month_caption")
-			.data(gOptions.month_caption)
+		var month_captions = svg.selectAll(".month_caption");
+
+		if ( ! gOptions.repeatMonthCaption ) {
+			//keep only the first year
+			month_captions._groups.splice(1,month_captions._groups.length);
+		}
+		month_captions
+			.data(gOptions.monthCaption)
 			.enter().append("text")
 				.attr("class", "month_caption")
 				.attr("x", function(d, i) { return ((i+1) * (gOptions.cellSize * 53 / 12)-gOptions.cellSize*1.2) ; })

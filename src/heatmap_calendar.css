@@ -5,7 +5,7 @@ body {
 .year_caption {
 	font-size: 1.1em;
 	font-weight: 600;
-	text-anchor: end;
+	text-anchor: middle;
 }
 
 .day_caption {
