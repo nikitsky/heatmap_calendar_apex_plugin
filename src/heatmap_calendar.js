@@ -55,12 +55,10 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 				    .attr("class", gOptions.calendarClass)
 				.append("g")
 				    .attr("transform", function(d, i){return "translate(50," +(( gOptions.repeatMonthCaption || i == 0)? 30:1) + ")"});
-				    // .attr("transform", "translate(50, 30)");
 
 		//caption: year
 		svg.append("text")
 	    .attr("transform", "translate(-36," + gOptions.cellSize * 3.5 + ")rotate(-90)")
-		    // .attr("dy", "-.25em")
 		    .attr("class", "year_caption")
 		    .text(function(d) { return d; });
 
@@ -69,11 +67,11 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 			.data (d3.range(0,7))
 			.data ( gOptions.dayCaption )
 			.enter().append("text")
-				.attr("class", "day_caption")
+			    .text(function(d) { return d ; })
 				.attr("x", "-5")
-			    .attr("y", function(d, i) { return gOptions.cellSize*(i+1); })
 			    .attr("dy", "-.3em")
-			    .text(function(d) { return d ; });
+				.attr("class", "day_caption")
+			    .attr("y", function(d, i) { return gOptions.cellSize*(i+1); });
 
 		//capton: month
 		var month_captions = svg.selectAll(".month_caption");
@@ -99,7 +97,8 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 			    .attr("height", gOptions.cellSize)
 			    .attr("x", function(d) { return week(d) * gOptions.cellSize; })
 			    .attr("y", function(d) { return day(d) * gOptions.cellSize; })
-			    .datum(format);
+			    .datum(format)
+			;
 
 		// put date to the cell
 		rect.append("title")
@@ -129,9 +128,11 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 			.object(pData.dateData);
 
 		rect.filter(function(d) { return d in data; })
-			.style('fill', function (d, i) {return color(data[d]);})
 			.select("title")
 			.text(function(d) { return d + ": " + data[d]; });
+		rect.filter(function(d) { return d in data; })
+			.transition().delay(function(d,i){return i/2;})
+				.style('fill', function (d, i) {return color(data[d]);})
 	}
 
 
