@@ -21,8 +21,8 @@ It is based on [Mike Bostock’s Calendar View](https://bl.ocks.org/mbostock/406
 | dayCaption         | array   | Custom caption for weekdays (from Monday to Sunday), e.g. ['M','T','W','T','F','S','S'] |
 | monthCaption       | array   | Custom caption for month (from January to December), e.g. ['Jän', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sept', 'Okt', 'Nov', 'Dez'] |
 | repeatMonthCaption | boolean | Show month captions for every year. False is default |
-| colorRange         | array   | Starting and finishing colours |
-| valueRange         | array   | Expected minimum and maximum values used for colours blending |
+| colorRange         | array   | Starting and finishing colours, e.g. ["white", "green"] |
+| valueRange         | array   | Expected minimum and maximum values used for colours blending, e.g. [0,10] |
 
 
 released under [BSD license](http://opensource.org/licenses/BSD-3-Clause). Copyright 2017 Valentine Nikitsky
