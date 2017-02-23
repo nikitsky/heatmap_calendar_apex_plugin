@@ -9,7 +9,8 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 		    monthCaption: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
 		    repeatMonthCaption: false,
 		    DateFormatMask: "%d.%m.%Y",
-		    calendarClass: "RdYlGn",
+		    colorRange: ["white", "green"],
+		    valueRange: [0,20]
         },
         pOptions
     );
@@ -38,6 +39,11 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
     format = d3.timeFormat(gOptions.DateFormatMask);
     width = gOptions.cellSize * 53 + 51;
     height = gOptions.cellSize * 7 + 31;
+
+    //define color range
+    var color = d3.scaleLinear()
+		.range(gOptions.colorRange)
+		.domain(gOptions.valueRange);
 
 	function _draw( pData ) {
 		var svg = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' ).selectAll("svg")
@@ -123,7 +129,7 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 			.object(pData.dateData);
 
 		rect.filter(function(d) { return d in data; })
-			.attr("class", function(d) { return "day q" + data[d] + "-11"; })
+			.style('fill', function (d, i) {return color(data[d]);})
 			.select("title")
 			.text(function(d) { return d + ": " + data[d]; });
 	}
