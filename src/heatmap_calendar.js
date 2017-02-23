@@ -1,3 +1,4 @@
+//Version 0.2
 function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 
     var gOptions = jQuery.extend(
@@ -8,7 +9,7 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
             dayCaption: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
 		    monthCaption: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
 		    repeatMonthCaption: false,
-		    DateFormatMask: "%d.%m.%Y",
+		    dateFormat: "%d.%m.%Y",
 		    colorRange: ["white", "green"],
 		    valueRange: [0,20]
         },
@@ -36,7 +37,7 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 			return ( d.getDay() == 0 ) ? 6: d.getDay()-1;
 		}
     week = d3.timeFormat("%W"),
-    format = d3.timeFormat(gOptions.DateFormatMask);
+    format = d3.timeFormat("%Y%m%d");
     width = gOptions.cellSize * 53 + 51;
     height = gOptions.cellSize * 7 + 31;
 
@@ -102,7 +103,7 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 
 		// put date to the cell
 		rect.append("title")
-		    .text(function(d) { return d; });
+		    .text(function(d) { return d3.timeFormat(gOptions.dateFormat)(d3.timeParse("%Y%m%d")(d)); });
 
 		// draw months borders
 		svg.selectAll(".month")
@@ -129,7 +130,7 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 
 		rect.filter(function(d) { return d in data; })
 			.select("title")
-			.text(function(d) { return d + ": " + data[d]; });
+			.text(function(d) { return d3.timeFormat(gOptions.dateFormat)(d3.timeParse("%Y%m%d")(d)) + ": " + data[d]; });
 		rect.filter(function(d) { return d in data; })
 			.transition().delay(function(d,i){return i/2;})
 				.style('fill', function (d, i) {return color(data[d]);})

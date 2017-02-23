@@ -7,6 +7,7 @@ is
     l_SellSize      apex_application_page_regions.attribute_01%type := p_region.attribute_01;
     l_FirstYear     apex_application_page_regions.attribute_05%type := p_region.attribute_05;
     l_Periods       apex_application_page_regions.attribute_06%type := p_region.attribute_06;
+    l_dateFormat    apex_application_page_regions.attribute_07%type := p_region.attribute_07;
 begin
     --add d3js library
     apex_javascript.add_library( p_name                  => 'd3',
@@ -51,9 +52,14 @@ begin
                     p_name      => 'periods',
                     p_value     => sys.htf.escape_sc(coalesce(l_Periods,1)),
                     p_omit_null => false,
+                    p_add_comma => true
+                )||
+                apex_javascript.add_attribute(
+                    p_name      => 'dateFormat',
+                    p_value     => sys.htf.escape_sc(l_dateFormat),
+                    p_omit_null => true,
                     p_add_comma => false
                 )||
-            -- '}'||
             '},'|| p_region.init_javascript_code||
         ');'
     );

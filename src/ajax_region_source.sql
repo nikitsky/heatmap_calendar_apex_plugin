@@ -10,8 +10,6 @@ is
     c_day_column          constant varchar2(255) := p_region.attribute_02;
     c_value_column        constant varchar2(255) := p_region.attribute_03;
 
-    l_DateFormatMask      apex_application_page_regions.attribute_04%type := p_region.attribute_04;
-
     l_day_column_no          pls_integer;
     l_value_column_no        pls_integer;
 
@@ -74,7 +72,7 @@ begin
             l_value := apex_plugin_util.get_value_as_varchar2 (
                                p_data_type   => l_column_value_list(l_day_column_no).data_type,
                                p_value       => l_column_value_list(l_day_column_no).value_list(l_row_num),
-                               p_format_mask => l_DateFormatMask);
+                               p_format_mask => 'YYYYMMDD');
 
             apex_json.write('date', l_value);
 

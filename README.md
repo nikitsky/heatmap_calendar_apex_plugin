@@ -17,6 +17,7 @@ It is based on [Mike Bostock’s Calendar View](https://bl.ocks.org/mbostock/406
 | cellSize           | number  | Size of day square in pixels  |
 | firstYear          | number  | The first year to be shown on the calendar. If not provided, the current year is used |
 | periods            | number  | The number of years you want to display |
+| dateFormat         | string  | Date format mask in [d3-time-format](https://github.com/d3/d3-time-format#locale_format)  |
 | dayCaption         | array   | Custom caption for weekdays (from Monday to Sunday), e.g. ['M','T','W','T','F','S','S'] |
 | monthCaption       | array   | Custom caption for month (from January to December), e.g. ['Jän', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sept', 'Okt', 'Nov', 'Dez'] |
 | repeatMonthCaption | boolean | Show month captions for every year. False is default |
