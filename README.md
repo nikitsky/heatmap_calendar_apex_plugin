@@ -23,6 +23,7 @@ It is based on [Mike Bostock’s Calendar View](https://bl.ocks.org/mbostock/406
 | repeatMonthCaption | boolean | Show month captions for every year. False is default |
 | colorRange         | array   | Starting and finishing colours, e.g. ["white", "green"] |
 | valueRange         | array   | Expected minimum and maximum values used for colours blending, e.g. [0,10] |
+| showLegend         | boolean | Legend will not be shown if false |
 
 
 released under [BSD license](http://opensource.org/licenses/BSD-3-Clause). Copyright 2017 Valentine Nikitsky
