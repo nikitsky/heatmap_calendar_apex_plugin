@@ -1,4 +1,4 @@
-//Version 0.2
+//Version 0.3
 function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 
     var gOptions = jQuery.extend(
@@ -11,7 +11,8 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 		    repeatMonthCaption: false,
 		    dateFormat: "%d.%m.%Y",
 		    colorRange: ["white", "green"],
-		    valueRange: [0,20]
+		    valueRange: [0,20],
+		    showLegend: true
         },
         pOptions
     );
@@ -28,6 +29,7 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 
     }
 
+    gOptions.cellSize = parseInt(gOptions.cellSize);
     gOptions.firstYear = parseInt(gOptions.firstYear);
     gOptions.periods = parseInt(gOptions.periods);
 
@@ -98,8 +100,7 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 			    .attr("height", gOptions.cellSize)
 			    .attr("x", function(d) { return week(d) * gOptions.cellSize; })
 			    .attr("y", function(d) { return day(d) * gOptions.cellSize; })
-			    .datum(format)
-			;
+			    .datum(format) ;
 
 		// put date to the cell
 		rect.append("title")
@@ -121,6 +122,52 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 		      + "H" + w1 * gOptions.cellSize + "V" + (d1 + 1) * gOptions.cellSize
 		      + "H" + (w1 + 1) * gOptions.cellSize + "V" + 0
 		      + "H" + (w0 + 1) * gOptions.cellSize + "Z";
+		}
+
+		//legend
+		if ( gOptions.showLegend ) {
+			var key = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' )
+				 .append("svg")
+				 	.attr("width", width)
+				 	.attr("height", pOptions.cellSize*2)
+		            .attr("id","key")
+		            .attr("class","legend")
+		            .append('g')
+			            .attr("transform", "translate(50," + gOptions.cellSize*.5 +")");
+
+			//define data for legend
+		    var legendColor = d3.scaleLinear()
+				.range(gOptions.colorRange)
+				.domain(d3.range(0, gOptions.colorRange.length));
+				// .domain([0,5]);
+
+			var legendBreaks = d3.scaleLinear()
+				.range(gOptions.valueRange)
+				.interpolate(d3.interpolateRound)
+				.domain([0,5]);
+
+	        key.selectAll("rect")
+	            .data(d3.range(1,7))
+	            .enter().append("rect")
+			        .attr("class", "day")
+			        .attr("width",gOptions.cellSize)
+			        .attr("height",gOptions.cellSize)
+		            .style("fill",function(d){return color(d); })
+		            // .style("fill",function(d){return legendColor(d); })
+			        .attr("x",function(d,i){return width/6*i;})
+			        .attr("y",0);
+
+	        key.selectAll("text")
+	            .data(d3.range(1,7))
+	            .enter()
+	            .append("text")
+	            .attr("x",function(d,i){
+	                return (width/6*i + gOptions.cellSize+5);
+	            })
+	            .attr("y","0.8em")
+	            .text(function(d,i){
+	            	return ( i == 5 )? "over "+legendBreaks(5):"up to "+legendBreaks(d);
+	            });
 		}
 
 		var data = d3.nest()
