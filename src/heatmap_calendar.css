@@ -23,6 +23,10 @@ body {
   stroke: #ccc;
 }
 
+.colorscale {
+	stroke: #eee;
+}
+
 .month {
   fill: none;
   stroke: #000;

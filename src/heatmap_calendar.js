@@ -17,10 +17,6 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
         pOptions
     );
 
-    if (gOptions.firstYear == 0) {
-    		gOptions.firstYear = new Date().getFullYear()
-    };
-
 	if ( $.isFunction( pPluginInitJavascript ) ) {
 		var newOptions = {};
         var changedCalOptions = pPluginInitJavascript( newOptions );
@@ -29,19 +25,41 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 
     }
 
+    if (gOptions.firstYear == 0) {
+    		gOptions.firstYear = new Date().getFullYear()
+    };
+
     gOptions.cellSize = parseInt(gOptions.cellSize);
     gOptions.firstYear = parseInt(gOptions.firstYear);
     gOptions.periods = parseInt(gOptions.periods);
+
+	var margin = {
+		top: 4,
+		right: 4,
+		bottom: 4,
+		left: 4
+	};
+
+    var legend = {
+    	width:  gOptions.cellSize * 15,
+    	height: gOptions.cellSize * 15
+    };
+
+    var captionSize = {
+    	month: 24,
+    	day: 34,
+    	year: 14
+    };
 
     var gRegion$ = jQuery( "#" + apex.util.escapeCSS( pRegionId ) + '_hc', apex.gPageContext$);
 
 	var day = function(d) {
 			return ( d.getDay() == 0 ) ? 6: d.getDay()-1;
-		}
-    week = d3.timeFormat("%W"),
-    format = d3.timeFormat("%Y%m%d");
-    width = gOptions.cellSize * 53 + 51;
-    height = gOptions.cellSize * 7 + 31;
+		};
+
+ 	var week = d3.timeFormat("%W"),
+	    format = d3.timeFormat("%Y%m%d"),
+	    width = gOptions.cellSize * 53 + captionSize.day + captionSize.year + margin.left + margin.right+1;
 
     //define color range
     var color = d3.scaleLinear()
@@ -53,15 +71,15 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 		    .data(d3.range(gOptions.firstYear, gOptions.firstYear+gOptions.periods))
 		  	.enter().append("svg")
 				    .attr("width", width)
-				    //add 30px for month caption if required
-				    .attr("height", function(d, i){ return (gOptions.cellSize * 7) + (( gOptions.repeatMonthCaption || i == 0)? 31:2) ;})
+				    //add room for month caption if required
+				    .attr("height", function(d, i){ return ((gOptions.cellSize * 7) + margin.top + margin.bottom) + (( gOptions.repeatMonthCaption || i == 0)? captionSize.month:0) ;})
 				    .attr("class", gOptions.calendarClass)
 				.append("g")
-				    .attr("transform", function(d, i){return "translate(50," +(( gOptions.repeatMonthCaption || i == 0)? 30:1) + ")"});
+				    .attr("transform", function(d, i){return "translate(" + (captionSize.year + captionSize.day + margin.left) + "," +(margin.top + (( gOptions.repeatMonthCaption || i == 0)? captionSize.month:0)) + ")"});
 
 		//caption: year
 		svg.append("text")
-	    .attr("transform", "translate(-36," + gOptions.cellSize * 3.5 + ")rotate(-90)")
+	    .attr("transform", "translate(-" + captionSize.day + "," + gOptions.cellSize * 3.5 + ")rotate(-90)")
 		    .attr("class", "year_caption")
 		    .text(function(d) { return d; });
 
@@ -71,7 +89,7 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 			.data ( gOptions.dayCaption )
 			.enter().append("text")
 			    .text(function(d) { return d ; })
-				.attr("x", "-5")
+				.attr("x", "-4")
 			    .attr("dy", "-.3em")
 				.attr("class", "day_caption")
 			    .attr("y", function(d, i) { return gOptions.cellSize*(i+1); });
@@ -126,6 +144,7 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 
 		//legend
 		if ( gOptions.showLegend ) {
+			//create separate svg for legend
 			var key = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' )
 				 .append("svg")
 				 	.attr("width", width)
@@ -133,41 +152,69 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 		            .attr("id","key")
 		            .attr("class","legend")
 		            .append('g')
-			            .attr("transform", "translate(50," + gOptions.cellSize*.5 +")");
+			            .attr("transform", "translate(" + (width - margin.right - gOptions.cellSize * 10) +",0)");
+
+			//Append a defs (for definition) element to your SVG
+			var defs = key.append("defs");
+
+			//Append a linearGradient element to the defs and give it a unique id
+			var linearGradient = defs.append("linearGradient")
+			    .attr("id", "linear-gradient");
+
+			//Horizontal gradient
+			linearGradient
+			    .attr("x1", "0%")
+			    .attr("y1", "0%")
+			    .attr("x2", "100%")
+			    .attr("y2", "0%");
+
+
+			//Append multiple color stops by using D3's data/enter step
+			linearGradient.selectAll("stop")
+				.data(color.range())
+					.enter().append("stop")
+						.attr("offset", function(d,i){ return i/(color.range().length-1);})
+						.attr("stop-color", function(d){ return d;});
+
+			key.append("rect")
+				.attr("width", gOptions.cellSize*10)
+				.attr("height", gOptions.cellSize)
+				.attr("class", "colorscale")
+				.style("fill", "url(#linear-gradient)");
 
 			//define data for legend
-		    var legendColor = d3.scaleLinear()
-				.range(gOptions.colorRange)
-				.domain(d3.range(0, gOptions.colorRange.length));
-				// .domain([0,5]);
+		 //    var legendColor = d3.scaleLinear()
+			// 	.range(gOptions.colorRange)
+			// 	.domain(d3.range(0, gOptions.colorRange.length));
+			// 	// .domain([0,5]);
 
-			var legendBreaks = d3.scaleLinear()
-				.range(gOptions.valueRange)
-				.interpolate(d3.interpolateRound)
-				.domain([0,5]);
+			// // var legendBreaks = d3.scaleLinear()
+			// // 	.range(gOptions.valueRange)
+			// // 	.interpolate(d3.interpolateRound)
+			// // 	.domain([0,5]);
 
-	        key.selectAll("rect")
-	            .data(d3.range(1,7))
-	            .enter().append("rect")
-			        .attr("class", "day")
-			        .attr("width",gOptions.cellSize)
-			        .attr("height",gOptions.cellSize)
-		            .style("fill",function(d){return color(d); })
-		            // .style("fill",function(d){return legendColor(d); })
-			        .attr("x",function(d,i){return width/6*i;})
-			        .attr("y",0);
+	  // //       key.selectAll("rect")
+	  // //           .data(d3.range(1,7))
+	  // //           .enter().append("rect")
+			// //         .attr("class", "day")
+			// //         .attr("width",gOptions.cellSize)
+			// //         .attr("height",gOptions.cellSize)
+		 // //            .style("fill",function(d){return color(d); })
+		 // //            // .style("fill",function(d){return legendColor(d); })
+			// //         .attr("x",function(d,i){return width/6*i;})
+			// //         .attr("y",0);
 
-	        key.selectAll("text")
-	            .data(d3.range(1,7))
-	            .enter()
-	            .append("text")
-	            .attr("x",function(d,i){
-	                return (width/6*i + gOptions.cellSize+5);
-	            })
-	            .attr("y","0.8em")
-	            .text(function(d,i){
-	            	return ( i == 5 )? "over "+legendBreaks(5):"up to "+legendBreaks(d);
-	            });
+	  // //       key.selectAll("text")
+	  // //           .data(d3.range(1,7))
+	  // //           .enter()
+	  // //           .append("text")
+	  // //           .attr("x",function(d,i){
+	  // //               return (width/6*i + gOptions.cellSize+5);
+	  // //           })
+	  // //           .attr("y","0.8em")
+	  // //           .text(function(d,i){
+	  // //           	return ( i == 5 )? "over "+legendBreaks(5):"up to "+legendBreaks(d);
+	  // //           });
 		}
 
 		var data = d3.nest()
@@ -179,7 +226,8 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 			.select("title")
 			.text(function(d) { return d3.timeFormat(gOptions.dateFormat)(d3.timeParse("%Y%m%d")(d)) + ": " + data[d]; });
 		rect.filter(function(d) { return d in data; })
-			.transition().delay(function(d,i){return i/2;})
+			.transition()
+				.delay(function(d,i){return i*2;})
 				.style('fill', function (d, i) {return color(data[d]);})
 	}
 
