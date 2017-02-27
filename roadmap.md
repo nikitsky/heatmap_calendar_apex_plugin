@@ -1,6 +1,7 @@
 ###Heatmap calendar plugin to-do's
 
-- [ ] Legend 
+- [x] Gradient Legend (for even color distribution only)
+- [x] Discrete Legend 
 - [ ] Automatic min\max calculation 
 - [ ] Additional comments  
 - [ ] More than one record per day 
