@@ -35,14 +35,15 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 
 	var margin = {
 		top: 4,
-		right: 4,
+		right: 8,
 		bottom: 4,
 		left: 4
 	};
 
     var legend = {
+    	ticks: 5,
     	width:  gOptions.cellSize * 15,
-    	height: gOptions.cellSize * 15
+    	height: gOptions.cellSize
     };
 
     var captionSize = {
@@ -63,8 +64,121 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 
     //define color range
     var color = d3.scaleLinear()
-		.range(gOptions.colorRange)
-		.domain(gOptions.valueRange);
+		.domain(gOptions.valueRange)
+		.range(gOptions.colorRange);
+
+	function _legendGradient( ) {
+		//create separate svg for legend
+		var key = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' )
+			 .append("svg")
+			 	.attr("width", width)
+			 	.attr("height", legend.height*2 + margin.bottom)
+	            .attr("id","key")
+	            .attr("class","legend")
+	            .append('g')
+		            .attr("transform", "translate(" + (width - margin.right - legend.width) +",0)");
+
+		//Append a defs (for definition) element to your SVG
+		var defs = key.append("defs");
+
+		//Append a linearGradient element to the defs and give it a unique id
+		var linearGradient = defs.append("linearGradient")
+		    .attr("id", "linear-gradient");
+
+		//Horizontal gradient
+		linearGradient
+		    .attr("x1", "0%")
+		    .attr("y1", "0%")
+		    .attr("x2", "100%")
+		    .attr("y2", "0%");
+
+		//Append multiple color stops
+		linearGradient.selectAll("stop")
+			.data(gOptions.colorRange.slice(0, gOptions.valueRange.length))
+			// .data(color.range())
+				.enter().append("stop")
+					.attr("offset", function(d,i){ return i/(color.range().length-1);})
+					.attr("stop-color", function(d){ return d;});
+
+		//color gradient rectangle
+		key.append("rect")
+			.attr("width", legend.width)
+			.attr("height", legend.height)
+			.attr("class", "colorscale")
+			.style("fill", "url(#linear-gradient)");
+
+		//Set scale for x-axis
+		var xScale = d3.scaleLinear()
+			.range([0, legend.width-1])
+			.domain([gOptions.valueRange[0], gOptions.valueRange[gOptions.valueRange.length-1]]);
+
+		//Define x-axis
+		var axis = d3.axisBottom(xScale)
+			.tickSize(0)
+			.tickSizeInner(0)
+			.tickPadding(3)
+			.tickSizeOuter(0)
+			.ticks(legend.ticks);
+
+		key.append("g")
+			.attr("transform", "translate(0," + (legend.height) +")")
+			.call(axis);
+	};
+
+	function _legendBoxed() {
+		var key = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' )
+			.append("svg")
+			 	.attr("width", width)
+			 	.attr("height", legend.height*2 + margin.bottom)
+	            .attr("id","key")
+	            .attr("class","legend")
+	            .append('g')
+		            .attr("transform", "translate(" + (margin.left + captionSize.year + captionSize.day) +",0)");
+	};
+
+	function _legendDiscret() {
+		var key = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' )
+			.append("svg")
+			 	.attr("width", width)
+			 	.attr("height", legend.height + margin.bottom)
+	            .attr("id","key")
+	            .attr("class","legend")
+	            .append('g')
+		            .attr("transform", "translate(" + (margin.left + captionSize.year + captionSize.day) +",0)");
+
+		//define data for legend
+	    var legendColor = d3.scaleLinear()
+			.range(gOptions.colorRange)
+			.domain(d3.range(0, legend.ticks));
+
+		var legendBreaks = d3.scaleLinear()
+			.range(gOptions.valueRange)
+			.interpolate(d3.interpolateRound)
+			.domain(d3.range(0, legend.ticks));
+
+        key.selectAll("rect")
+            .data(d3.range(0, legend.ticks))
+            .enter().append("rect")
+		        .attr("class", "day")
+		        .attr("width",gOptions.cellSize)
+		        .attr("height",gOptions.cellSize)
+	            .style("fill",function(d){return color(d); })
+	            // .style("fill",function(d){return legendColor(d); })
+		        .attr("x",function(d,i){return width/legend.ticks*i;})
+		        .attr("y",0);
+
+	        // key.selectAll("text")
+	        //     .data(d3.range(1,7))
+	        //     .enter()
+	        //     .append("text")
+	        //     .attr("x",function(d,i){
+	        //         return (width/6*i + gOptions.cellSize+5);
+	        //     })
+	        //     .attr("y","0.8em")
+	        //     .text(function(d,i){
+	        //     	return ( i == 5 )? "over "+legendBreaks(5):"up to "+legendBreaks(d);
+	        //     });
+	};
 
 	function _draw( pData ) {
 		var svg = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' ).selectAll("svg")
@@ -144,77 +258,8 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 
 		//legend
 		if ( gOptions.showLegend ) {
-			//create separate svg for legend
-			var key = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' )
-				 .append("svg")
-				 	.attr("width", width)
-				 	.attr("height", pOptions.cellSize*2)
-		            .attr("id","key")
-		            .attr("class","legend")
-		            .append('g')
-			            .attr("transform", "translate(" + (width - margin.right - gOptions.cellSize * 10) +",0)");
-
-			//Append a defs (for definition) element to your SVG
-			var defs = key.append("defs");
-
-			//Append a linearGradient element to the defs and give it a unique id
-			var linearGradient = defs.append("linearGradient")
-			    .attr("id", "linear-gradient");
-
-			//Horizontal gradient
-			linearGradient
-			    .attr("x1", "0%")
-			    .attr("y1", "0%")
-			    .attr("x2", "100%")
-			    .attr("y2", "0%");
-
-
-			//Append multiple color stops by using D3's data/enter step
-			linearGradient.selectAll("stop")
-				.data(color.range())
-					.enter().append("stop")
-						.attr("offset", function(d,i){ return i/(color.range().length-1);})
-						.attr("stop-color", function(d){ return d;});
-
-			key.append("rect")
-				.attr("width", gOptions.cellSize*10)
-				.attr("height", gOptions.cellSize)
-				.attr("class", "colorscale")
-				.style("fill", "url(#linear-gradient)");
-
-			//define data for legend
-		 //    var legendColor = d3.scaleLinear()
-			// 	.range(gOptions.colorRange)
-			// 	.domain(d3.range(0, gOptions.colorRange.length));
-			// 	// .domain([0,5]);
-
-			// // var legendBreaks = d3.scaleLinear()
-			// // 	.range(gOptions.valueRange)
-			// // 	.interpolate(d3.interpolateRound)
-			// // 	.domain([0,5]);
-
-	  // //       key.selectAll("rect")
-	  // //           .data(d3.range(1,7))
-	  // //           .enter().append("rect")
-			// //         .attr("class", "day")
-			// //         .attr("width",gOptions.cellSize)
-			// //         .attr("height",gOptions.cellSize)
-		 // //            .style("fill",function(d){return color(d); })
-		 // //            // .style("fill",function(d){return legendColor(d); })
-			// //         .attr("x",function(d,i){return width/6*i;})
-			// //         .attr("y",0);
-
-	  // //       key.selectAll("text")
-	  // //           .data(d3.range(1,7))
-	  // //           .enter()
-	  // //           .append("text")
-	  // //           .attr("x",function(d,i){
-	  // //               return (width/6*i + gOptions.cellSize+5);
-	  // //           })
-	  // //           .attr("y","0.8em")
-	  // //           .text(function(d,i){
-	  // //           	return ( i == 5 )? "over "+legendBreaks(5):"up to "+legendBreaks(d);
-	  // //           });
+			_legendGradient();
+			// _legendDiscret();
 		}
 
 		var data = d3.nest()

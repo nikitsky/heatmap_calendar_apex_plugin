@@ -24,7 +24,15 @@ body {
 }
 
 .colorscale {
-	stroke: #eee;
+	/*stroke: #eee;*/
+}
+
+#key path.domain {
+  stroke: #ccc;
+}
+
+#key .tick text {
+	fill: black;
 }
 
 .month {
