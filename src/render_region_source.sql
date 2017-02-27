@@ -8,15 +8,8 @@ is
     l_FirstYear     apex_application_page_regions.attribute_05%type := p_region.attribute_05;
     l_Periods       apex_application_page_regions.attribute_06%type := p_region.attribute_06;
     l_dateFormat    apex_application_page_regions.attribute_07%type := p_region.attribute_07;
-    l_showLegend    boolean;
+    l_legendType    apex_application_page_regions.attribute_08%type := p_region.attribute_08;
 begin
-
-    if p_region.attribute_08 = 'N' then
-        l_showLegend  := false;
-    else
-        l_showLegend  := true;
-    end if;
-
     --add d3js library
     apex_javascript.add_library( p_name                  => 'd3',
                                  p_directory             => p_plugin.file_prefix,
@@ -69,8 +62,8 @@ begin
                     p_add_comma => true
                 )||
                 apex_javascript.add_attribute(
-                    p_name      => 'showLegend',
-                    p_value     => l_showLegend,
+                    p_name      => 'legendType',
+                    p_value     => sys.htf.escape_sc(l_legendType),
                     p_omit_null => true,
                     p_add_comma => false
                 )||
