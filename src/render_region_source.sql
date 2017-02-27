@@ -9,6 +9,12 @@ is
     l_Periods       apex_application_page_regions.attribute_06%type := p_region.attribute_06;
     l_dateFormat    apex_application_page_regions.attribute_07%type := p_region.attribute_07;
     l_legendType    apex_application_page_regions.attribute_08%type := p_region.attribute_08;
+
+    l_StartValue    apex_application_page_regions.attribute_09%type := p_region.attribute_09;
+    l_StartColour   apex_application_page_regions.attribute_10%type := p_region.attribute_10;
+    l_endValue      apex_application_page_regions.attribute_11%type := p_region.attribute_11;
+    l_EndColour     apex_application_page_regions.attribute_12%type := p_region.attribute_12;
+
 begin
     --add d3js library
     apex_javascript.add_library( p_name                  => 'd3',
@@ -64,6 +70,30 @@ begin
                 apex_javascript.add_attribute(
                     p_name      => 'legendType',
                     p_value     => sys.htf.escape_sc(l_legendType),
+                    p_omit_null => true,
+                    p_add_comma => true
+                )||
+                apex_javascript.add_attribute(
+                    p_name      => 'startValue',
+                    p_value     => sys.htf.escape_sc(l_StartValue),
+                    p_omit_null => true,
+                    p_add_comma => true
+                )||
+                apex_javascript.add_attribute(
+                    p_name      => 'startColor',
+                    p_value     => sys.htf.escape_sc(l_StartColour),
+                    p_omit_null => true,
+                    p_add_comma => true
+                )||
+                apex_javascript.add_attribute(
+                    p_name      => 'endValue',
+                    p_value     => sys.htf.escape_sc(l_endValue),
+                    p_omit_null => true,
+                    p_add_comma => true
+                )||
+                apex_javascript.add_attribute(
+                    p_name      => 'endColor',
+                    p_value     => sys.htf.escape_sc(l_EndColour),
                     p_omit_null => true,
                     p_add_comma => false
                 )||

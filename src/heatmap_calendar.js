@@ -1,4 +1,4 @@
-//Version 0.3
+//Version 0.4
 function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 
     var gOptions = jQuery.extend(
@@ -10,8 +10,12 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 		    monthCaption: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
 		    repeatMonthCaption: false,
 		    dateFormat: "%d.%m.%Y",
-		    colorRange: ["white", "green"],
-		    valueRange: [0,20],
+		    // colorRange: ["white", "green"],
+		    // valueRange: [0,18],
+		    startValue: 0,
+		    endValue: "auto",
+		    startColor: "white",
+		    endColor: "green",
 		    legendType: "gradient"
         },
         pOptions
@@ -61,117 +65,6 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
  	var week = d3.timeFormat("%W"),
 	    format = d3.timeFormat("%Y%m%d"),
 	    width = gOptions.cellSize * 53 + captionSize.day + captionSize.year + margin.left + margin.right+1;
-
-    //define color range
-    var color = d3.scaleLinear()
-		.domain(gOptions.valueRange)
-		.range(gOptions.colorRange);
-
-	function _legendGradient( ) {
-		//create separate svg for legend
-		var key = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' )
-			 .append("svg")
-			 	.attr("width", width)
-			 	.attr("height", legend.height*2 + margin.bottom)
-	            .attr("id","key")
-	            .attr("class","legend")
-	            .append('g')
-		            .attr("transform", "translate(" + (width - margin.right - legend.width) +",0)");
-
-		//Append a defs (for definition) element to your SVG
-		var defs = key.append("defs");
-
-		//Append a linearGradient element to the defs and give it a unique id
-		var linearGradient = defs.append("linearGradient")
-		    .attr("id", "linear-gradient");
-
-		//Horizontal gradient
-		linearGradient
-		    .attr("x1", "0%")
-		    .attr("y1", "0%")
-		    .attr("x2", "100%")
-		    .attr("y2", "0%");
-
-		//Append multiple color stops
-		linearGradient.selectAll("stop")
-			.data(gOptions.colorRange.slice(0, gOptions.valueRange.length))
-			// .data(color.range())
-				.enter().append("stop")
-					.attr("offset", function(d,i){ return i/(color.range().length-1);})
-					.attr("stop-color", function(d){ return d;});
-
-		//color gradient rectangle
-		key.append("rect")
-			.attr("width", legend.width)
-			.attr("height", legend.height)
-			.attr("class", "colorscale")
-			.style("fill", "url(#linear-gradient)");
-
-		//Set scale for x-axis
-		var xScale = d3.scaleLinear()
-			.range([0, legend.width-1])
-			.domain([gOptions.valueRange[0], gOptions.valueRange[gOptions.valueRange.length-1]]);
-
-		//Define x-axis
-		var axis = d3.axisBottom(xScale)
-			.tickSize(0)
-			.tickSizeInner(0)
-			.tickPadding(3)
-			.tickSizeOuter(0)
-			.ticks(legend.ticks);
-
-		key.append("g")
-			.attr("transform", "translate(0," + (legend.height) +")")
-			.call(axis);
-	};
-
-	function _legendBoxed() {
-		var key = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' )
-			.append("svg")
-			 	.attr("width", width)
-			 	.attr("height", legend.height*2 + margin.bottom)
-	            .attr("id","key")
-	            .attr("class","legend")
-	            .append('g')
-		            .attr("transform", "translate(" + (margin.left + captionSize.year + captionSize.day) +",0)");
-	};
-
-	function _legendDiscrete() {
-		var key = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' )
-			.append("svg")
-			 	.attr("width", width)
-			 	.attr("height", legend.height + margin.bottom)
-	            .attr("id","key")
-	            .attr("class","legend")
-	            .append('g')
-		            .attr("transform", "translate(" + (margin.left + captionSize.year + captionSize.day) +",0)");
-
-		//define data for legend
-		var ticks = color.ticks(legend.ticks);
-
-        key.selectAll("rect")
-            .data(ticks)
-            .enter().append("rect")
-		        .attr("class", "day")
-		        .attr("width",gOptions.cellSize)
-		        .attr("height",gOptions.cellSize)
-	            .style("fill",function(d){return color(d); })
-		        .attr("x",function(d,i){return width/legend.ticks*i;})
-		        .attr("y",0);
-
-	        key.selectAll("text")
-	            .data(ticks)
-	            .enter()
-	            .append("text")
-	            .attr("x",function(d,i){
-	                return width/legend.ticks*i + gOptions.cellSize+5;
-	            })
-	            .attr("y","0.8em")
-	            .text(function(d,i){
-	            	return d;
-	            	// return ( i == 5 )? "over "+legendBreaks(5):"up to "+legendBreaks(d);
-	            });
-	};
 
 	function _draw( pData ) {
 		var svg = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' ).selectAll("svg")
@@ -249,17 +142,37 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 		      + "H" + (w0 + 1) * gOptions.cellSize + "Z";
 		}
 
-		//legend
-		switch ( gOptions.legendType ) {
-			case "gradient":
-				 _legendGradient();
-				 break;
-			case "discrete":
-				_legendDiscrete();
-				break;
-			default:
-				{}
+
+		//define display range. if valueRange array length less then 2, the startValue and endValue attributes are used
+		if ( typeof gOptions.valueRange == "undefined" || !gOptions.valueRange.constructor == Array || gOptions.valueRange.length<2) {
+
+			gOptions.valueRange = [];
+
+			// if startValue attribute is not number then the minimum value from the data used
+			if ( ! isNaN(+gOptions.startValue) ) {
+				gOptions.valueRange[0] = parseInt(gOptions.startValue);
+			} else {
+				gOptions.valueRange[0] = d3.min(pData.dateData, function(d) { return d.value; })
+			}
+
+			// if endValue attribute is not number then the maximum value from the data used
+			if ( ! isNaN(+gOptions.endValue) ) {
+				gOptions.valueRange[1] = parseInt(gOptions.endValue);
+			} else {
+				gOptions.valueRange[1] = d3.max(pData.dateData, function(d) { return d.value; })
+			}
 		}
+
+		if ( typeof gOptions.colorRange == "undefined" || ! gOptions.colorRange.constructor == Array || gOptions.colorRange.length<2) {
+			gOptions.colorRange = [];
+			gOptions.colorRange[0] = gOptions.startColor;
+			gOptions.colorRange[1] = gOptions.endColor;
+		}
+
+	    //define color range
+	    var color = d3.scaleLinear()
+			.domain(gOptions.valueRange)
+			.range(gOptions.colorRange);
 
 		var data = d3.nest()
 			.key(function(e) {return e.date })
@@ -272,7 +185,114 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 		rect.filter(function(d) { return d in data; })
 			.transition()
 				.delay(function(d,i){return i*2;})
-				.style('fill', function (d, i) {return color(data[d]);})
+				.style('fill', function (d, i) {return color(data[d]);});
+
+		//legend
+		switch ( gOptions.legendType ) {
+			case "gradient":
+				 _legendGradient();
+				 break;
+			case "discrete":
+				_legendDiscrete();
+				break;
+			default:
+				{}
+		}
+
+		function _legendGradient( ) {
+			//create separate svg for legend
+			var key = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' )
+				 .append("svg")
+				 	.attr("width", width)
+				 	.attr("height", legend.height*2 + margin.bottom)
+		            .attr("id","key")
+		            .attr("class","legend")
+		            .append('g')
+			            .attr("transform", "translate(" + (width - margin.right - legend.width) +",0)");
+
+			//Append a defs (for definition) element to your SVG
+			var defs = key.append("defs");
+
+			//Append a linearGradient element to the defs and give it a unique id
+			var linearGradient = defs.append("linearGradient")
+			    .attr("id", "linear-gradient");
+
+			//Horizontal gradient
+			linearGradient
+			    .attr("x1", "0%")
+			    .attr("y1", "0%")
+			    .attr("x2", "100%")
+			    .attr("y2", "0%");
+
+			//Append multiple color stops
+			linearGradient.selectAll("stop")
+				.data(gOptions.colorRange.slice(0, gOptions.valueRange.length))
+				// .data(color.range())
+					.enter().append("stop")
+						.attr("offset", function(d,i){ return i/(color.range().length-1);})
+						.attr("stop-color", function(d){ return d;});
+
+			//color gradient rectangle
+			key.append("rect")
+				.attr("width", legend.width)
+				.attr("height", legend.height)
+				.attr("class", "colorscale")
+				.style("fill", "url(#linear-gradient)");
+
+			//Set scale for x-axis
+			var xScale = d3.scaleLinear()
+				.range([0, legend.width-1])
+				.domain([gOptions.valueRange[0], gOptions.valueRange[gOptions.valueRange.length-1]]);
+
+			//Define x-axis
+			var axis = d3.axisBottom(xScale)
+				.tickSize(0)
+				.tickSizeInner(0)
+				.tickPadding(3)
+				.tickSizeOuter(0)
+				.ticks(legend.ticks);
+
+			key.append("g")
+				.attr("transform", "translate(0," + (legend.height) +")")
+				.call(axis);
+		};
+
+		function _legendDiscrete() {
+			var key = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' )
+				.append("svg")
+				 	.attr("width", width)
+				 	.attr("height", legend.height + margin.bottom)
+		            .attr("id","key")
+		            .attr("class","legend")
+		            .append('g')
+			            .attr("transform", "translate(" + (margin.left + captionSize.year + captionSize.day) +",0)");
+
+			//define data for legend
+			var ticks = color.ticks(legend.ticks);
+
+	        key.selectAll("rect")
+	            .data(ticks)
+	            .enter().append("rect")
+			        .attr("class", "day")
+			        .attr("width",gOptions.cellSize)
+			        .attr("height",gOptions.cellSize)
+		            .style("fill",function(d){return color(d); })
+			        .attr("x",function(d,i){return width/ticks.length*i;})
+			        .attr("y",0);
+
+		        key.selectAll("text")
+		            .data(ticks)
+		            .enter()
+		            .append("text")
+		            .attr("x",function(d,i){
+		                return width/ticks.length*i + gOptions.cellSize+5;
+		            })
+		            .attr("y","0.8em")
+		            .text(function(d,i){
+		            	return d;
+		            	// return ( i == 5 )? "over "+legendBreaks(5):"up to "+legendBreaks(d);
+		            });
+		};
 	}
 
 
