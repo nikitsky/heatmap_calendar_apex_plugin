@@ -142,6 +142,11 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 		      + "H" + (w0 + 1) * gOptions.cellSize + "Z";
 		}
 
+		//Aggregate labels data
+		var dataLabels = d3.nest()
+			.key(function(e) {return e.date })
+			.rollup(function(e) { return e.map(function(s){return s.label}); })
+			.object(pData.dateData);
 
 		//define display range. if valueRange array length less then 2, the startValue and endValue attributes are used
 		if ( typeof gOptions.valueRange == "undefined" || !gOptions.valueRange.constructor == Array || gOptions.valueRange.length<2) {
@@ -152,14 +157,16 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 			if ( ! isNaN(+gOptions.startValue) ) {
 				gOptions.valueRange[0] = parseInt(gOptions.startValue);
 			} else {
-				gOptions.valueRange[0] = d3.min(pData.dateData, function(d) { return d.value; })
+				// gOptions.valueRange[0] = d3.min(d3.values(data));
+				gOptions.valueRange[0] = d3.min(d3.values(dataLabels).map(function (s) { return s.length;}));
 			}
 
 			// if endValue attribute is not number then the maximum value from the data used
 			if ( ! isNaN(+gOptions.endValue) ) {
 				gOptions.valueRange[1] = parseInt(gOptions.endValue);
 			} else {
-				gOptions.valueRange[1] = d3.max(pData.dateData, function(d) { return d.value; })
+				// gOptions.valueRange[1] = d3.max(d3.values(data));
+				gOptions.valueRange[1] = d3.max(d3.values(dataLabels).map(function (s) { return s.length;}));
 			}
 		}
 
@@ -174,18 +181,19 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 			.domain(gOptions.valueRange)
 			.range(gOptions.colorRange);
 
-		var data = d3.nest()
-			.key(function(e) {return e.date })
-			.rollup(function(e) {return d3.sum(e, function(e){ return e.value; })})
-			.object(pData.dateData);
-
-		rect.filter(function(d) { return d in data; })
+		rect.filter(function(d) { return d in dataLabels; })
 			.select("title")
-			.text(function(d) { return d3.timeFormat(gOptions.dateFormat)(d3.timeParse("%Y%m%d")(d)) + ": " + data[d]; });
-		rect.filter(function(d) { return d in data; })
+			.html(function(d) {
+				var lLabels = "";
+				for (i in dataLabels[d]) {
+					lLabels += "<br>"+dataLabels[d][i];
+				};
+				return d3.timeFormat(gOptions.dateFormat)(d3.timeParse("%Y%m%d")(d)) + ": " + dataLabels[d].length + lLabels;
+			});
+		rect.filter(function(d) { return d in dataLabels; })
 			.transition()
 				.delay(function(d,i){return i*2;})
-				.style('fill', function (d, i) {return color(data[d]);});
+				.style('fill', function (d, i) {return color(dataLabels[d].length);});
 
 		//legend
 		switch ( gOptions.legendType ) {
