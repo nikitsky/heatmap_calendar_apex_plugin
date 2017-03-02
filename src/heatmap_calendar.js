@@ -1,4 +1,4 @@
-//Version 0.4
+//Version 0.5
 function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 
     var gOptions = jQuery.extend(
@@ -145,7 +145,9 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 		//Aggregate labels data
 		var dataLabels = d3.nest()
 			.key(function(e) {return e.date })
-			.rollup(function(e) { return e.map(function(s){return s.label}); })
+			.rollup(function(e) {
+				return {value: d3.sum(e, function(e){ return e.value; }), labels: e.map(function(s){return s.label})};
+			})
 			.object(pData.dateData);
 
 		//define display range. if valueRange array length less then 2, the startValue and endValue attributes are used
@@ -157,16 +159,14 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 			if ( ! isNaN(+gOptions.startValue) ) {
 				gOptions.valueRange[0] = parseInt(gOptions.startValue);
 			} else {
-				// gOptions.valueRange[0] = d3.min(d3.values(data));
-				gOptions.valueRange[0] = d3.min(d3.values(dataLabels).map(function (s) { return s.length;}));
+				gOptions.valueRange[0] = d3.min(d3.values(dataLabels).map(function (s) { return s.value;}));
 			}
 
 			// if endValue attribute is not number then the maximum value from the data used
 			if ( ! isNaN(+gOptions.endValue) ) {
 				gOptions.valueRange[1] = parseInt(gOptions.endValue);
 			} else {
-				// gOptions.valueRange[1] = d3.max(d3.values(data));
-				gOptions.valueRange[1] = d3.max(d3.values(dataLabels).map(function (s) { return s.length;}));
+				gOptions.valueRange[1] = d3.max(d3.values(dataLabels).map(function (s) { return s.value;}));
 			}
 		}
 
@@ -185,15 +185,15 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 			.select("title")
 			.html(function(d) {
 				var lLabels = "";
-				for (i in dataLabels[d]) {
-					lLabels += "<br>"+dataLabels[d][i];
+				for (i in dataLabels[d].labels) {
+					lLabels += "<br>"+dataLabels[d].labels[i];
 				};
-				return d3.timeFormat(gOptions.dateFormat)(d3.timeParse("%Y%m%d")(d)) + ": " + dataLabels[d].length + lLabels;
+				return d3.timeFormat(gOptions.dateFormat)(d3.timeParse("%Y%m%d")(d)) + ": " + dataLabels[d].value + lLabels;
 			});
 		rect.filter(function(d) { return d in dataLabels; })
 			.transition()
 				.delay(function(d,i){return i*2;})
-				.style('fill', function (d, i) {return color(dataLabels[d].length);});
+				.style('fill', function (d, i) {return color(dataLabels[d].value);});
 
 		//legend
 		switch ( gOptions.legendType ) {
