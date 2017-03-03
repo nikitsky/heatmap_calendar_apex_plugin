@@ -1,6 +1,6 @@
 {
   "name" : "Heatmap calendar",
-  "version" : "0.1",
+  "version" : "1.0",
   "description" : "Heatmap calendar is a region type plugin that shows year calendar where days are arranged into columns by week, then grouped by month and years. The values are visualised as colored cells",
   "keywords" : ["heatmap", "calendar", "year"],
   "homepage" : "https://github.com/nikitsky/heatmap_calendar_apex_plugin",
@@ -26,7 +26,7 @@
       "plugin" : {
         "internalName" : "COM.NIKITSKY.HEATMAP_CALENDAR",
         "type" : "region",
-        "demo" : "",
+        "demo" : "https://apex.oracle.com/pls/apex/f?p=113960",
         "previewImage" : "https://github.com/nikitsky/heatmap_calendar_apex_plugin/blob/master/preview.png?raw=true"
       }
     }
