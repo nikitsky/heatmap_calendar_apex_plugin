@@ -23,6 +23,7 @@ is
 begin
     apex_json.initialize_output (
         p_http_cache => false );
+
         -- Read the data based on the region source query
     l_column_value_list := apex_plugin_util.get_data2 (
                                p_sql_statement  => p_region.source,
@@ -47,15 +48,19 @@ begin
                             p_is_required       => true,
                             p_data_type         => apex_plugin_util.c_data_type_number
     );
-    l_label_column_no   := apex_plugin_util.get_column_no (
-                            p_attribute_label   => 'Label column',
-                            p_column_alias      => c_label_column,
-                            p_column_value_list => l_column_value_list,
-                            p_is_required       => true,
-                            p_data_type         => apex_plugin_util.c_data_type_varchar2
-    );
 
-    -- begin output as json
+    -- label is optional column.
+    if p_region.attribute_13 is not null then
+        l_label_column_no   := apex_plugin_util.get_column_no (
+                                p_attribute_label   => 'Label column',
+                                p_column_alias      => c_label_column,
+                                p_column_value_list => l_column_value_list,
+                                p_is_required       => true,
+                                p_data_type         => apex_plugin_util.c_data_type_varchar2
+        );
+    end if;
+
+        -- begin output as json
     owa_util.mime_header('application/json', false);
     htp.p('cache-control: no-cache');
     htp.p('pragma: no-cache');
@@ -97,11 +102,13 @@ begin
 
 
             -- get the label
-            l_value := apex_plugin_util.get_value_as_varchar2 (
-                               p_data_type   => l_column_value_list(l_label_column_no).data_type,
-                               p_value       => l_column_value_list(l_label_column_no).value_list(l_row_num) );
+            if p_region.attribute_13 is not null then
+                l_value := apex_plugin_util.get_value_as_varchar2 (
+                                   p_data_type   => l_column_value_list(l_label_column_no).data_type,
+                                   p_value       => l_column_value_list(l_label_column_no).value_list(l_row_num) );
 
-            apex_json.write('label', l_value);
+                apex_json.write('label', l_value);
+            end if;
 
             apex_json.close_object();
 

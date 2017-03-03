@@ -14,17 +14,13 @@ body {
 }
 
 .month_caption {
-	font-size: 1em%;
+	font-size: 1em;
 	text-anchor: end;
 }
 
 .day {
   fill: #fff;
   stroke: #ccc;
-}
-
-.colorscale {
-	/*stroke: #eee;*/
 }
 
 #key path.domain {
@@ -39,4 +35,30 @@ body {
   fill: none;
   stroke: #000;
   stroke-width: 2px;
+}
+
+.heatmap_tooltip_defaut {
+  background-color: #eee;
+}
+
+.heatmap_tooltip {
+  position: absolute;
+  min-width: 100px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 6px;
+  border-radius: 1px;
+  pointer-events: none;
+  height:auto;
+  overflow:auto;
+  font-size: 0.8em;
+}
+
+.heatmap_tooltip>.caption {
+  font-weight: 500;
+  font-size: 1em;
+}
+
+.heatmap_tooltip>.labels {
+  font-weight: 300;
 }

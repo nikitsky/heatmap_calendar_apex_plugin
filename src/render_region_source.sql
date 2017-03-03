@@ -15,26 +15,30 @@ is
     l_endValue      apex_application_page_regions.attribute_11%type := p_region.attribute_11;
     l_EndColour     apex_application_page_regions.attribute_12%type := p_region.attribute_12;
 
+    l_tooltipEnabled boolean;
+    l_jscode        VARCHAR2(32000);
 begin
-    --add d3js library
-    apex_javascript.add_library( p_name                  => 'd3',
-                                 p_directory             => p_plugin.file_prefix,
-                                 p_check_to_add_minified => TRUE );
+
+    l_tooltipEnabled := p_region.attribute_14 = 'Y';
 
     APEX_CSS.ADD_FILE (p_name           => 'heatmap_calendar',
                        p_directory      => p_plugin.file_prefix,
                        p_skip_extension => false);
 
+    --add d3js library
+    apex_javascript.add_library( p_name                  => 'd3',
+                                 p_directory             => p_plugin.file_prefix,
+                                 p_check_to_add_minified => TRUE );
+
     apex_javascript.add_library( p_name                  => 'heatmap_calendar',
                                  p_directory             => p_plugin.file_prefix,
-                                 p_check_to_add_minified => false );
+                                 p_check_to_add_minified => TRUE);
 
     -- Output the container for the calendar which is used by the Javascript code
     sys.htp.p('<div id='||apex_javascript.add_value(sys.htf.escape_sc(p_region.static_id||'_hc'), false)||'></div>');
 
     -- define variables for calendar
-    apex_javascript.add_onload_code (
-        p_code => 'heatmap_calendar('||
+    l_jscode :='heatmap_calendar('||
             apex_javascript.add_value(p_region.static_id)||
             '{'||
                 apex_javascript.add_attribute(
@@ -92,13 +96,25 @@ begin
                     p_add_comma => true
                 )||
                 apex_javascript.add_attribute(
+                    p_name      => 'tooltipEnabled',
+                    p_value     => l_tooltipEnabled,
+                    p_omit_null => true,
+                    p_add_comma => true
+                )||
+                apex_javascript.add_attribute(
                     p_name      => 'endColor',
                     p_value     => sys.htf.escape_sc(l_EndColour),
                     p_omit_null => true,
                     p_add_comma => false
                 )||
-            '},'|| p_region.init_javascript_code||
-        ');'
+            '}';
+    if p_region.init_javascript_code is not null then
+        l_jscode :=l_jscode||','||p_region.init_javascript_code||');';
+    else
+        l_jscode :=l_jscode||');';
+    end if;
+    apex_javascript.add_onload_code (
+        p_code => l_jscode
     );
 
     return null;

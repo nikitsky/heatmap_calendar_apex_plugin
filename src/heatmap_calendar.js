@@ -1,5 +1,7 @@
-//Version 0.5
+//Version 1.0
 function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
+
+	var gSpinner, gDayRect, gTooltip;
 
     var gOptions = jQuery.extend(
         {
@@ -10,13 +12,23 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 		    monthCaption: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
 		    repeatMonthCaption: false,
 		    dateFormat: "%d.%m.%Y",
-		    // colorRange: ["white", "green"],
-		    // valueRange: [0,18],
+		    colorRange: [],
+		    valueRange: [],
 		    startValue: 0,
 		    endValue: "auto",
 		    startColor: "white",
 		    endColor: "green",
-		    legendType: "gradient"
+		    legendType: "gradient",
+		    tooltipEnabled: true,
+		    tooltipClass: "heatmap_tooltip_defaut",
+		    legendTicks: 5,
+			marginTop: 4,
+			marginRight: 8,
+			marginBottom: 4,
+			marginLeft: 4,
+	    	captionMonthSize: 24,
+	    	captionDaySize: 34,
+	    	captionYearSize: 14
         },
         pOptions
     );
@@ -37,23 +49,9 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
     gOptions.firstYear = parseInt(gOptions.firstYear);
     gOptions.periods = parseInt(gOptions.periods);
 
-	var margin = {
-		top: 4,
-		right: 8,
-		bottom: 4,
-		left: 4
-	};
-
     var legend = {
-    	ticks: 5,
     	width:  gOptions.cellSize * 15,
     	height: gOptions.cellSize
-    };
-
-    var captionSize = {
-    	month: 24,
-    	day: 34,
-    	year: 14
     };
 
     var gRegion$ = jQuery( "#" + apex.util.escapeCSS( pRegionId ) + '_hc', apex.gPageContext$);
@@ -64,22 +62,53 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 
  	var week = d3.timeFormat("%W"),
 	    format = d3.timeFormat("%Y%m%d"),
-	    width = gOptions.cellSize * 53 + captionSize.day + captionSize.year + margin.left + margin.right+1;
+	    width = gOptions.cellSize * 53 + gOptions.captionDaySize + gOptions.captionYearSize + gOptions.marginLeft + gOptions.marginRight+1;
 
-	function _draw( pData ) {
-		var svg = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' ).selectAll("svg")
+	gRegion$
+        .on( "apexrefresh", _refresh )
+        .trigger( "apexrefresh" );
+
+    //main function
+    function _refresh() {
+        gSpinner = apex.widget.waitPopup();
+        _drawCalendar();
+        apex.server.plugin(
+            gOptions.ajaxIdentifier,
+            {
+                pageItems: gOptions.pageItems
+            },
+            {
+                dataType: "json",
+                accept: "application/json",
+                refreshObject: gRegion$,
+                success: _fillColour,
+                error:  _debug
+            }
+        );
+    }
+
+	function _drawCalendar() {
+		if ( gOptions.tooltipEnabled ) {
+			gTooltip = d3.select( "body" )
+		        .append("div")
+		        .attr("class",  "heatmap_tooltip " + gOptions.tooltipClass)
+		        .style("position", "absolute")
+		        .style("visibility", "hidden");
+		};
+
+	 	var svg = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' ).selectAll("svg")
 		    .data(d3.range(gOptions.firstYear, gOptions.firstYear+gOptions.periods))
 		  	.enter().append("svg")
 				    .attr("width", width)
 				    //add room for month caption if required
-				    .attr("height", function(d, i){ return ((gOptions.cellSize * 7) + margin.top + margin.bottom) + (( gOptions.repeatMonthCaption || i == 0)? captionSize.month:0) ;})
+				    .attr("height", function(d, i){ return ((gOptions.cellSize * 7) + gOptions.marginTop + gOptions.marginBottom) + (( gOptions.repeatMonthCaption || i == 0)? gOptions.captionMonthSize:0) ;})
 				    .attr("class", gOptions.calendarClass)
 				.append("g")
-				    .attr("transform", function(d, i){return "translate(" + (captionSize.year + captionSize.day + margin.left) + "," +(margin.top + (( gOptions.repeatMonthCaption || i == 0)? captionSize.month:0)) + ")"});
+				    .attr("transform", function(d, i){return "translate(" + (gOptions.captionYearSize + gOptions.captionDaySize + gOptions.marginLeft) + "," +(gOptions.marginTop + (( gOptions.repeatMonthCaption || i == 0)? gOptions.captionMonthSize:0)) + ")"});
 
 		//caption: year
 		svg.append("text")
-	    .attr("transform", "translate(-" + captionSize.day + "," + gOptions.cellSize * 3.5 + ")rotate(-90)")
+	    .attr("transform", "translate(-" + gOptions.captionDaySize + "," + gOptions.cellSize * 3.5 + ")rotate(-90)")
 		    .attr("class", "year_caption")
 		    .text(function(d) { return d; });
 
@@ -110,7 +139,7 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 				.text(function(d,i){ return d });
 
 		// days
-		var rect = svg.selectAll(".day")
+		gDayRect = svg.selectAll(".day")
 			.data(function(d) { return d3.timeDay.range(new Date(d, 0, 1), new Date(d + 1, 0, 1)); })
 		  	.enter().append("rect")
 			    .attr("class", "day")
@@ -120,9 +149,11 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 			    .attr("y", function(d) { return day(d) * gOptions.cellSize; })
 			    .datum(format) ;
 
-		// put date to the cell
-		rect.append("title")
-		    .text(function(d) { return d3.timeFormat(gOptions.dateFormat)(d3.timeParse("%Y%m%d")(d)); });
+		// put date to the cell only of tooltips are disabled
+		if ( ! gOptions.tooltipEnabled ) {
+			gDayRect.append("title")
+			    .text(function(d) { return d3.timeFormat(gOptions.dateFormat)(d3.timeParse("%Y%m%d")(d)); });
+		};
 
 		// draw months borders
 		svg.selectAll(".month")
@@ -141,12 +172,14 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 		      + "H" + (w1 + 1) * gOptions.cellSize + "V" + 0
 		      + "H" + (w0 + 1) * gOptions.cellSize + "Z";
 		}
+	};
 
+	function _fillColour ( pData ){
 		//Aggregate labels data
 		var dataLabels = d3.nest()
 			.key(function(e) {return e.date })
 			.rollup(function(e) {
-				return {value: d3.sum(e, function(e){ return e.value; }), labels: e.map(function(s){return s.label})};
+				return {value: d3.sum(e, function(e){ return e.value; }), labels: cleanArray(e.map(function(s){return (s.label)?s.label:""; }))};
 			})
 			.object(pData.dateData);
 
@@ -181,19 +214,54 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 			.domain(gOptions.valueRange)
 			.range(gOptions.colorRange);
 
-		rect.filter(function(d) { return d in dataLabels; })
-			.select("title")
-			.html(function(d) {
-				var lLabels = "";
-				for (i in dataLabels[d].labels) {
-					lLabels += "<br>"+dataLabels[d].labels[i];
-				};
-				return d3.timeFormat(gOptions.dateFormat)(d3.timeParse("%Y%m%d")(d)) + ": " + dataLabels[d].value + lLabels;
-			});
-		rect.filter(function(d) { return d in dataLabels; })
+		gSpinner.remove();
+
+		//colour the days
+		gDayRect.filter(function(d) { return d in dataLabels; })
 			.transition()
 				.delay(function(d,i){return i*2;})
 				.style('fill', function (d, i) {return color(dataLabels[d].value);});
+
+		//add text only of tooltips are disabled
+		if ( ! gOptions.tooltipEnabled ) {
+			gDayRect.filter(function(d) { return d in dataLabels; })
+				.select("title")
+				.html(function(d) {
+					var lLabels = "";
+					for (i in dataLabels[d].labels) {
+						lLabels += "<br>"+dataLabels[d].labels[i];
+					};
+					return d3.timeFormat(gOptions.dateFormat)(d3.timeParse("%Y%m%d")(d)) + ": " + dataLabels[d].value + lLabels;
+				});
+		};
+
+		//tooltip generator
+        if ( gOptions.tooltipEnabled ) {
+	        gDayRect.on('mouseover', function(d, i, j) {
+		      if ( d ) {
+				var lTooltipText = d3.timeFormat(gOptions.dateFormat)(d3.timeParse("%Y%m%d")(d)) ;
+				if ( dataLabels[d] != undefined ) {
+					lTooltipText += ": "+dataLabels[d].value;
+					var lTooltipLabel = "";
+					for (i in dataLabels[d].labels) {
+						lTooltipLabel += ((i > 0)?"<br>":"")+dataLabels[d].labels[i];
+					};
+				} else {
+					lTooltipText += ": 0";
+					lTooltipLabel = "";
+				};
+		        gTooltip.html('<div class="caption">' + lTooltipText + '</div>' +((lTooltipLabel.length>0)?'<div class="labels">' + lTooltipLabel + '</div>':''));
+		        gTooltip.style("visibility", "visible");
+		      } else
+		          gTooltip.style("visibility", "hidden");
+		      })
+		      .on('mouseout', function(d, i, j) {
+		          gTooltip.style("visibility", "hidden");
+		      })
+		      .on("mousemove", function(d, i) {
+		          gTooltip.style("top", (d3.event.pageY + 10) + "px").style("left", (d3.event.pageX + 10) + "px");
+		      });
+        };
 
 		//legend
 		switch ( gOptions.legendType ) {
@@ -212,11 +280,11 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 			var key = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' )
 				 .append("svg")
 				 	.attr("width", width)
-				 	.attr("height", legend.height*2 + margin.bottom)
+				 	.attr("height", legend.height*2 + gOptions.marginBottom)
 		            .attr("id","key")
 		            .attr("class","legend")
 		            .append('g')
-			            .attr("transform", "translate(" + (width - margin.right - legend.width) +",0)");
+			            .attr("transform", "translate(" + (width - gOptions.marginRight - legend.width) +",0)");
 
 			//Append a defs (for definition) element to your SVG
 			var defs = key.append("defs");
@@ -258,7 +326,7 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 				.tickSizeInner(0)
 				.tickPadding(3)
 				.tickSizeOuter(0)
-				.ticks(legend.ticks);
+				.ticks(gOptions.legendTicks);
 
 			key.append("g")
 				.attr("transform", "translate(0," + (legend.height) +")")
@@ -269,14 +337,14 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 			var key = d3.select( "#" + apex.util.escapeCSS( pRegionId ) + '_hc' )
 				.append("svg")
 				 	.attr("width", width)
-				 	.attr("height", legend.height + margin.bottom)
+				 	.attr("height", legend.height + gOptions.marginBottom)
 		            .attr("id","key")
 		            .attr("class","legend")
 		            .append('g')
-			            .attr("transform", "translate(" + (margin.left + captionSize.year + captionSize.day) +",0)");
+			            .attr("transform", "translate(" + (gOptions.marginLeft + gOptions.captionYearSize + gOptions.captionDaySize) +",0)");
 
 			//define data for legend
-			var ticks = color.ticks(legend.ticks);
+			var ticks = color.ticks(gOptions.legendTicks);
 
 	        key.selectAll("rect")
 	            .data(ticks)
@@ -303,31 +371,21 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 		};
 	}
 
-
-    function _refresh() {
-        apex.server.plugin(
-            gOptions.ajaxIdentifier,
-            {
-                pageItems: gOptions.pageItems
-            },
-            {
-                dataType: "json",
-                accept: "application/json",
-                refreshObject: gRegion$,
-                success: _draw,
-                error:  _debug
-            }
-        );
-    }
-
     function _debug( i ) {
         apex.debug.log( i );
+        gSpinner.remove();
     }
 
-
-    gRegion$
-        .on( "apexrefresh", _refresh )
-        .trigger( "apexrefresh" );
+	// Will remove all falsy values: undefined, null, 0, false, NaN and "" (empty string)
+	function cleanArray(actual) {
+		var newArray = new Array();
+		for (var i = 0; i < actual.length; i++) {
+			if (actual[i]) {
+				newArray.push(actual[i]);
+			}
+		}
+		return newArray;
+	};
 }
 
 
