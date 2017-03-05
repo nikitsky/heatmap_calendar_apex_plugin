@@ -252,19 +252,23 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 						lTooltipLabel += ((i > 0)?"<br>":"")+dataLabels[d].labels[i];
 					};
 				} else {
-					lTooltipText += ": 0";
+					lTooltipText += (gOptions.hideValue)?"":": 0";
 					lTooltipLabel = "";
 				};
 		        gTooltip.html('<div class="caption">' + lTooltipText + '</div>' +((lTooltipLabel.length>0)?'<div class="labels">' + lTooltipLabel + '</div>':''));
 		        gTooltip
+		        	.style("opacity",0)
+		        	.style("visibility", "visible")
 		        	.transition()
-		        		.delay(400)
-			        	.style("visibility", "visible");
+		        		.delay(300)
+		        		.style("opacity", "1");
 		      } else
-		          gTooltip.style("visibility", "hidden");
+		          gTooltip.style("visibility", "hidden")
+		          	.interrupt();
 		      })
 		      .on('mouseout', function(d, i, j) {
-		          gTooltip.style("visibility", "hidden");
+		          gTooltip.style("visibility", "hidden")
+		          		.interrupt();
 		      })
 		      .on("mousemove", function(d, i) {
 		      		if (d3.mouse(this)[0] > width-$(gTooltip._groups[0]).width()-30) {
