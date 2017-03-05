@@ -28,7 +28,8 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 			marginLeft: 4,
 	    	captionMonthSize: 24,
 	    	captionDaySize: 34,
-	    	captionYearSize: 14
+	    	captionYearSize: 14,
+	    	hideValue: false,
         },
         pOptions
     );
@@ -231,7 +232,9 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 					for (i in dataLabels[d].labels) {
 						lLabels += "<br>"+dataLabels[d].labels[i];
 					};
-					return d3.timeFormat(gOptions.dateFormat)(d3.timeParse("%Y%m%d")(d)) + ": " + dataLabels[d].value + lLabels;
+					return d3.timeFormat(gOptions.dateFormat)(d3.timeParse("%Y%m%d")(d)) +
+											((gOptions.hideValue)?"":": " + dataLabels[d].value)
+  										+ lLabels;
 				});
 		};
 
@@ -241,7 +244,9 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 		      if ( d ) {
 				var lTooltipText = d3.timeFormat(gOptions.dateFormat)(d3.timeParse("%Y%m%d")(d)) ;
 				if ( dataLabels[d] != undefined ) {
-					lTooltipText += ": "+dataLabels[d].value;
+					if ( !gOptions.hideValue ) {
+						lTooltipText += ": "+dataLabels[d].value;
+					}
 					var lTooltipLabel = "";
 					for (i in dataLabels[d].labels) {
 						lTooltipLabel += ((i > 0)?"<br>":"")+dataLabels[d].labels[i];
@@ -251,7 +256,10 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 					lTooltipLabel = "";
 				};
 		        gTooltip.html('<div class="caption">' + lTooltipText + '</div>' +((lTooltipLabel.length>0)?'<div class="labels">' + lTooltipLabel + '</div>':''));
-		        gTooltip.style("visibility", "visible");
+		        gTooltip
+		        	.transition()
+		        		.delay(400)
+			        	.style("visibility", "visible");
 		      } else
 		          gTooltip.style("visibility", "hidden");
 		      })
@@ -259,7 +267,12 @@ function heatmap_calendar( pRegionId, pOptions, pPluginInitJavascript ) {
 		          gTooltip.style("visibility", "hidden");
 		      })
 		      .on("mousemove", function(d, i) {
-		          gTooltip.style("top", (d3.event.pageY + 10) + "px").style("left", (d3.event.pageX + 10) + "px");
+		      		if (d3.mouse(this)[0] > width-$(gTooltip._groups[0]).width()-30) {
+		      			var ldX = -10 -$(gTooltip._groups[0]).width()
+		      		} else {
+		      			var ldX = 10
+		      		}
+		          gTooltip.style("top", (d3.event.pageY + 10) + "px").style("left", (d3.event.pageX + ldX) + "px");
 		      });
         };
 

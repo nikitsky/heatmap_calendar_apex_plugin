@@ -43,6 +43,7 @@ There are some additional parameters which allow to customize calendar look. The
 | repeatMonthCaption | boolean | If true, plugin will draw month captions for every year |
 | colorRange         | array   | Although continuous scales typically have two values each in their domain and range, provided by the plugin attributes, you can specify more than two values produces a piecewise scale. For example, to create a diverging colour scale that interpolates between white and red for negative values, and white and green for positive values, you can pass the array: ["red", "white", "green"]. The colorRange overrides the Starting colour and Ending colour attributes |
 | valueRange         | array   | If more than two colours used, the data range should be provided as well. For example, to create a diverging colour scale that interpolates between white and red for negative values, and white and green for positive values, you can pass the array: [-10,0, 10]. The valueRange overrides the Starting value and Ending value attributes |
+| hideValue          | boolean | Do not show value but only label |
 | legendTicks        | number  | You can specify approximately count representative values from the values domain for legend. If count is not specified, it defaults to 5|
 | tooltipClass       | string  | Css class to be used for the tooltip. You can define your own class or use Universal Theme CSS utility classes that define colour palette, e.g. 'u-color-16-bg' for lightblue tooltip |
 | marginTop          | number  | Calendar top margin in pixels |
