@@ -1,19 +1,19 @@
-#Oracle APEX Heatmap calendar plugin
+# Oracle APEX Heatmap calendar plugin
 
 Heatmap calendar is a region type plugin that shows year calendar where days are arranged into columns by week, then grouped by month and years. The values are visualised as coloured cells per day.
 It is based on [Mike Bostock’s Calendar View](https://bl.ocks.org/mbostock/4063318) and uses [D3 JavaScript library](https://github.com/d3/d3)
 
-#Install
+# Install
 
 * Import plugin file "region_type_plugin_com_nikitsky_heatmap_calendar.sql" from source directory into your application
 
-#Preview
+# Preview
 ![Heatmap calendar preview](https://github.com/nikitsky/heatmap_calendar_apex_plugin/blob/master/preview.png?raw=true "Plugin screenshot")
 
-#Demo application
+# Demo application
 https://apex.oracle.com/pls/apex/f?p=113960
 
-#Plugin attributes
+# Plugin attributes
 Plugin expects data from database. The query should return at least two columns: date and value. An additional label is possible. Plugin aggregates data on the day level summarising the value and concatenating labels.
 
 | Plugin attribute  |  description                    |
@@ -32,7 +32,7 @@ Plugin expects data from database. The query should return at least two columns:
 | Label column      | Region SQL column with a label to be added to the day value. It is optional |
 | Tooltip           | To show the day value and labels as tooltip |
 
-#Plugin advanced settings
+# Plugin advanced settings
 
 There are some additional parameters which allow to customize calendar look. These parameters should be passed to plugin by the Initialization JavaScript Code. 
 
@@ -54,4 +54,4 @@ There are some additional parameters which allow to customize calendar look. The
 | captionDaySize     | number  | Width of day of week caption. Would be required to amend if you change font size of month_caption css class |
 | captionYearSize    | number  | Width of day of week caption. Would be required to amend if you change font size of year_caption css class |
 
-released under [BSD license](http://opensource.org/licenses/BSD-3-Clause). Copyright 2017 Valentine Nikitsky
+Released under [BSD license](http://opensource.org/licenses/BSD-3-Clause). &copy; 2017 Valentine Nikitsky
